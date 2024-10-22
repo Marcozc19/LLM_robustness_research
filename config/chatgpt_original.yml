@@ -1,0 +1,12 @@
+model:
+  name: "chatgpt"
+  version: "2"
+
+dataset:
+  name: "truthful_qa"
+
+distortion:
+  type: ["character"]
+
+evaluation:
+  file: "evaluations/complexwebqa.py"
