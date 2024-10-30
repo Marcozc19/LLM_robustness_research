@@ -19,6 +19,7 @@ class DistortionProcessor:
 
     def apply_distortions(self):
         """Applies the specified distortions from the distortion_types list."""
+        if not self.distortion_types: return self.data
         for distortion_name in self.distortion_types:
             if distortion_name not in self.distortion_dict:
                 raise ValueError(f"Distortion type '{distortion_name}' not supported. Please choose from {list(self.distortion_dict.keys())}.")
@@ -46,6 +47,7 @@ class DistortionProcessor:
             return ' '.join(words)
 
         data['question'] = data['question'].apply(apply_distortion)
+        print("")
         return data
 
     def sentence(self, data, random_order: bool):

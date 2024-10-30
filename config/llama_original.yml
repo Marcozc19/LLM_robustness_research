@@ -1,5 +1,5 @@
 model:
-  name: "chatgpt"
+  name: "llama"
   version: "2"
 
 dataset:

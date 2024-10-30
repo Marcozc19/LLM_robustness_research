@@ -4,6 +4,7 @@ import pandas as pd
 import os
 from . import truthful_qa
 from . import distortion 
+import util
 
 data_source = {
     "truthful_qa": truthful_qa.main()
@@ -12,17 +13,10 @@ data_source = {
 class Data:
     def __init__(self, config):
         self.config = config
+        self.distortion_percentage = 0.3
         self.distortion_type = self.config["distortion"]["type"]
-        self.file_path = self.get_filepath()
+        self.file_path = util.get_dataset_path(config)
         self.data = self.load_data()
-        processor = distortion.DistortionProcessor(self.data, self.distortion_type, distortion_percentage=0.3)
-        self.data = processor.apply_distortions()
-
-    def get_filepath(self):
-        dataset_path = "data/" +  str(self.config['dataset']['name']) + "/" +str(self.config['dataset']['name']) + "_" + str(self.config['distortion']['type']) + ".json"
-        return dataset_path
-
-
 
     def load_data(self):
         if os.path.exists(self.file_path):
@@ -33,6 +27,8 @@ class Data:
             else:
                 raise ValueError(f"Dataset {self.config['dataset']['name']} not found. Please choose one of {list(data_source.keys())}.")
             # save the data to a json file
+            processor = distortion.DistortionProcessor(df, self.distortion_type, self.distortion_percentage)
+            df = processor.apply_distortions()
             df.to_json(self.file_path, orient='records')
-        return df
+        return df.iloc[:20,:]
     

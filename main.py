@@ -2,7 +2,7 @@ import argparse
 import json
 import yaml
 from data_processor.main import Data
-from eval import eval
+import eval
 import inference
 
 def load_config():
@@ -19,7 +19,7 @@ def main(config):
     data = Data(config)
     # run inference using the dataset created
     inference.main(config, data)
-    # eval(config)
+    print(eval.eval(config))
     
     
 

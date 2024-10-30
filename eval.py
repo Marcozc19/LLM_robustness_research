@@ -1,23 +1,21 @@
 from models.chatgpt import Model
 import importlib.util
 import os
+from evaluations.truthful_qa import TruthfulQA_Eval
+import util
+import pandas as pd
 
-def load_evaluation_module(evaluation_file_path):
-    # Dynamically import the evaluation module
-    module_name = os.path.basename(evaluation_file_path).replace('.py', '')
-    
-    # Load the module from the file path
-    spec = importlib.util.spec_from_file_location(module_name, evaluation_file_path)
-    eval_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(eval_module)
-    
-    return eval_module
 def eval(config):
-    evaluation_file = config["evaluation"]["file"]
-    eval_module = load_evaluation_module(evaluation_file)
-    # Run the evaluation (assuming the eval function exists in the evaluation module)
-    eval_module.main(config)
+    eval_dict = {
+        "truthful_qa": TruthfulQA_Eval
+    }
 
+    evalutor = eval_dict[config['dataset']['name']]()
+    pred_ans_path = util.get_baseline_path(config)
+    distorted_ans_path = util.get_output_path(config)
+    # Run the evaluation (assuming the eval function exists in the evaluation module)
+
+    return evalutor.evaluate(pd.read_json(pred_ans_path), pd.read_json(distorted_ans_path))
 if __name__ == '__main__':
     chatgpt = Model()
     chatgpt.init()

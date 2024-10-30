@@ -1,16 +1,23 @@
 import transformers
 from transformers import LlamaForCausalLM, AutoTokenizer
 import torch
+import pandas as pd
 
 
-class Model:
-    def __init__(self):
+class Model():
+    def __init__(self, config, data):
+        self.config = config
+        self.data = data
         self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
         self.model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
     
-    def query(self, query):
-        inputs = self.tokenizer.encode(query, return_tensors="pt")
-        print(inputs)
+    def query(self):
+        if isinstance(self.data, pd.DataFrame):
+            queries = self.data['question'].tolist()  # Extract all questions into a list
+        else:
+            raise ValueError("Data is not in expected format (DataFrame).")
+        inputs = self.tokenizer.encode(queries, return_tensors="pt")
+        print("input:", inputs)
         outputs = self.model.generate(
             inputs.input_ids,
             attention_mask = inputs['attention_mask'],
@@ -19,7 +26,7 @@ class Model:
             num_return_sequences=1,
             pad_token_id=self.tokenizer.eos_token_id
         )
-        print(outputs)
+        print("output:", outputs)
 
         response = [self.tokenizer.batch_decode(output, skip_special_tokens=True)[0] for output in outputs]
         return response

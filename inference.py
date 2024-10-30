@@ -1,4 +1,6 @@
 from models import chatgpt, llama
+import json
+import util
 
 def main(config, data):
     model_choice = config["model"]["name"]
@@ -14,6 +16,13 @@ def main(config, data):
         raise ValueError(f"Model {model_choice} is not available. Please choose one of {list(available_models.keys())}.")
     
     # run the query
-    results = model.query()
+
+
+    queries, results = model.query()
+
+    output_file = util.get_output_path(config)
+
+    with open(output_file, "w") as json_file:
+            json.dump(results, json_file, indent=4)
 
 

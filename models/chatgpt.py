@@ -29,17 +29,18 @@ class Model():
             inputs['input_ids'],
             attention_mask = attention_mask,
             do_sample=True,
-            max_length=50,
+            max_new_tokens=50,
             num_return_sequences=1,
             pad_token_id=self.tokenizer.eos_token_id
         )
 
-        response = [self.tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
-        
-        for query, response in zip(queries, response):
+        responses = [self.tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
+
+        for query, response in zip(queries, responses):
             print(f"Query: {query}")
             print(f"Response: {response}")
             print("="*50)
 
 
 
+        return queries, responses
