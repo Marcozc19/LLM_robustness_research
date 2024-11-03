@@ -1,6 +1,10 @@
 import pandas as pd
 import random
 from SoundsLike.SoundsLike import Search
+import nltk
+from nltk import pos_tag, word_tokenize
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger_eng')
 
 class DistortionProcessor:
     def __init__(self, data, distortion_types, distortion_percentage=0.3):
@@ -26,6 +30,7 @@ class DistortionProcessor:
             else:
                 distortion_function = self.distortion_dict[distortion_name]
                 self.data = distortion_function(self.data)
+        print("Distortion applied")
         return self.data
 
     def get_data(self):
@@ -51,19 +56,15 @@ class DistortionProcessor:
         return data
 
     def sentence(self, data, random_order: bool):
-        def reorder_characters(word):
-            if len(word) > 1:
-                start_index = random.randint(0, len(word) - 1)
-                if random_order:
-                    return word[start_index:] + word[:start_index]
-                else:
-                    return word[start_index:][::-1] + word[:start_index][::-1]
-            return word
-        
         def apply_reorder(sentence):
             words = sentence.split()
-            reordered_words = [reorder_characters(word) for word in words]
-            return ' '.join(reordered_words)
+            if random_order:
+                random.shuffle(words)  # Shuffle the list of words
+            else:
+                random_seed = random.randint(0, len(words) - 1)
+                print("random seed: ", random_seed)
+                words =words[random_seed:] + words[:random_seed]
+            return ' '.join(words) 
 
         data['question'] = data['question'].apply(apply_reorder)
         return data
@@ -87,14 +88,27 @@ class DistortionProcessor:
         return data
 
     def grammar(self, data):
-        def delete_random_word(sentence):
-            words = sentence.split()
-            if len(words) > 1:
-                i = random.randint(0, len(words) - 1)
-                del words[i]
-            return ' '.join(words)
+        def remove_words(sentence, remove_pos):
+            """
+            Remove specific parts of speech from a sentence.
 
-        data['question'] = data['question'].apply(delete_random_word)
+            :param sentence: The input question sentence.
+            :param remove_pos: A list of POS tags to remove.
+            :return: Modified sentence with specified POS tags removed.
+            """
+            # Tokenize the sentence
+            words = word_tokenize(sentence)
+            
+            # Tag each word with its part of speech
+            tagged_words = pos_tag(words)
+            
+            # Rebuild the sentence, skipping words with the specified POS tags
+            filtered_words = [word for word, pos in tagged_words if pos not in remove_pos]
+             
+            return ' '.join(filtered_words)
+
+        remove_pos = ['IN', 'VBZ']  # Removing prepositions and verbs (IN = preposition, VBZ = verb, 3rd person singular)
+        data['question'] = data['question'].apply(lambda x: remove_words(x, remove_pos))
         return data
 
 # Example usage
@@ -104,7 +118,7 @@ if __name__ == "__main__":
     })
 
     # Specify the types of distortions you want to apply
-    distortions_to_apply = ["character", "phonetic", "grammar"]
+    distortions_to_apply = ["grammar"]
     
     processor = DistortionProcessor(example_data, distortions_to_apply, distortion_percentage=0.3)
     distorted_data = processor.apply_distortions()
