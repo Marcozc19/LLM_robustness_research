@@ -1,4 +1,4 @@
-from models import chatgpt, llama
+from models import chatgpt, llama, pythia, smolLM2
 import json
 import util
 
@@ -7,7 +7,9 @@ def main(config, data):
 
     available_models = {
         'chatgpt': chatgpt,
-        'llama': llama
+        'llama': llama,
+        'pythia': pythia,
+        'smollm2': smolLM2
     }
 
     if model_choice in available_models:
@@ -18,11 +20,11 @@ def main(config, data):
     # run the query
 
 
-    queries, results = model.query()
+    result_df = model.query()
 
     output_file = util.get_output_path(config)
 
-    with open(output_file, "w") as json_file:
-            json.dump(results, json_file, indent=4)
+    with open(output_file, "w", encoding="utf-8",newline='') as f:
+        result_df.to_csv(f, index=False)
 
 

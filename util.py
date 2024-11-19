@@ -17,9 +17,13 @@ def read_json(path):
 def get_dataset_path(config):
     return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name']) +"_"+str(config['model']['name'])+ "_" + str(config['distortion']['type']) + "_dataset.json"
 def get_output_path(config):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['distortion']['type']) +"_output.json"
+    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['distortion']['type']) +"_output.csv"
+def get_eval_path(config):
+    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['distortion']['type']) +"_eval.csv"
+def get_log_path(config):
+    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['distortion']['type']) +"_log.txt"
 def get_baseline_path(config):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name'])+ "_[]_output.json"
+    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name'])+ "_[]_output.csv"
 
 if __name__ == '__main__':
     config = load_config()

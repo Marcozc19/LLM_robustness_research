@@ -20,10 +20,6 @@ def main(config):
     # run inference using the dataset created
     inference.main(config, data)
     print(eval.eval(config))
-    
-    
-
-
 
 
 if __name__ == '__main__':

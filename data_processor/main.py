@@ -19,6 +19,7 @@ class Data:
         self.data = self.load_data()
 
     def load_data(self):
+        print("================ Loading Data ================")
         if os.path.exists(self.file_path):
             df = pd.read_json(self.file_path)
         else:
@@ -30,5 +31,5 @@ class Data:
             processor = distortion.DistortionProcessor(df, self.distortion_type, self.distortion_percentage)
             df = processor.apply_distortions()
             df.to_json(self.file_path, orient='records')
-        return df.iloc[:20,:]
+        return df.iloc[:,:]
     

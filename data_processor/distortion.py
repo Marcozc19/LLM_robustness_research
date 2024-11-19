@@ -18,7 +18,6 @@ class DistortionProcessor:
             "sentence": lambda data: self.sentence(data, False),
             "sentence random": lambda data: self.sentence(data, True),
             "phonetic": self.phonetic,
-            "grammar": self.grammar,
         }
 
     def apply_distortions(self):
@@ -50,9 +49,9 @@ class DistortionProcessor:
             for idx in indices_to_distort:
                 words[idx] = distort_word(words[idx])
             return ' '.join(words)
-
+        print("============== Distorting data - character =================")
         data['question'] = data['question'].apply(apply_distortion)
-        print("")
+        print("============== Finished distorting data - character =================")
         return data
 
     def sentence(self, data, random_order: bool):
@@ -65,8 +64,9 @@ class DistortionProcessor:
                 print("random seed: ", random_seed)
                 words =words[random_seed:] + words[:random_seed]
             return ' '.join(words) 
-
+        print("============== Distorting data - sentence =================")
         data['question'] = data['question'].apply(apply_reorder)
+        print("============== Finished distorting data - sentence =================")
         return data
 
     def phonetic(self, data):
@@ -74,18 +74,27 @@ class DistortionProcessor:
             phonetic_options = Search.closeHomophones(word)
             if phonetic_options:
                 return random.choice(phonetic_options)
-            return word
+            return None  # Return None if no homophones are available
         
         def apply_distortion(sentence):
             words = sentence.split()
             num_to_distort = max(1, int(len(words) * self.distortion_percentage))
-            indices_to_distort = random.sample(range(len(words)), num_to_distort)
-            for idx in indices_to_distort:
-                words[idx] = replace_phonetic(words[idx])
+            indices_to_distort = set()  # Track modified indices to avoid duplicate distortions
+            
+            while len(indices_to_distort) < num_to_distort and len(indices_to_distort) < len(words):
+                idx = random.choice(range(len(words)))
+                if idx not in indices_to_distort:
+                    modified_word = replace_phonetic(words[idx])
+                    if modified_word:  # Apply only if a phonetic alternative is available
+                        words[idx] = modified_word
+                        indices_to_distort.add(idx)
+            
             return ' '.join(words)
-
+        print("================ Distorting data - phonetic =================")
         data['question'] = data['question'].apply(apply_distortion)
+        print("================ Finished distorting data - phonetic =================")
         return data
+        
 
     def grammar(self, data):
         def remove_words(sentence, remove_pos):
