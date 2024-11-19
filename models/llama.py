@@ -1,5 +1,5 @@
 import transformers
-from transformers import LlamaForCausalLM, AutoTokenizer
+from transformers import LlamaForCausalLM, LlamaTokenizer, AutoTokenizer
 import torch
 import pandas as pd
 
@@ -7,9 +7,9 @@ import pandas as pd
 class Model():
     def __init__(self, config, data):
         self.config = config
-        self.data = data
-        self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
-        self.model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+        self.data = data.load_data()
+        self.model = LlamaForCausalLM.from_pretrained("C:/Users/zhuan/.cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
+        self.tokenizer = LlamaTokenizer.from_pretrained("C:/Users/zhuan/.cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
     
     def query(self):
         if isinstance(self.data, pd.DataFrame):
@@ -33,18 +33,21 @@ class Model():
     
 
 if __name__ == "__main__":
-    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
-    print("tokenizer loaded")
+
+    model_name = "meta-llama/Llama-2-7b-hf"  # Replace with the correct model ID
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = LlamaForCausalLM.from_pretrained(model_name)
+
+    # model = LlamaForCausalLM.from_pretrained("C:/Users/zhuan/.cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
+    # tokenizer = LlamaTokenizer.from_pretrained("C:/Users/zhuan/.cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
+
     prompt = "Hey, are you conscious? Can you talk to me?"
-    inputs = tokenizer.encode(prompt, return_tensors="pt")
-    print(inputs)
-    model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+    inputs = tokenizer(prompt, return_tensors="pt")
+
     # Generate
     generate_ids = model.generate(inputs.input_ids, max_length=30)
-    print(generate_ids)
     res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-    print(res)
-
+    print("Response:", res)
 
     
 
