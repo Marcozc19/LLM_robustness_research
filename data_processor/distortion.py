@@ -71,10 +71,17 @@ class DistortionProcessor:
 
     def phonetic(self, data):
         def replace_phonetic(word):
-            phonetic_options = Search.closeHomophones(word)
-            if phonetic_options:
-                return random.choice(phonetic_options)
-            return None  # Return None if no homophones are available
+            try:
+                phonetic_options = Search.closeHomophones(word)
+                if phonetic_options:
+                    return random.choice(phonetic_options)
+            except ValueError as e:
+                # Log the specific error
+                print(f"ValueError for word '{word}': {e}")
+            except Exception as e:
+                # Catch other unexpected exceptions
+                print(f"Unexpected error for word '{word}': {e}")
+            return None
         
         def apply_distortion(sentence):
             words = sentence.split()

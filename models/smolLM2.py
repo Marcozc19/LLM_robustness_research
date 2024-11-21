@@ -8,13 +8,13 @@ class Model:
         print("================ Initializing SmolLM2 ================")
         # Initialize model configuration and data
         self.config = config
-        checkpoint = "HuggingFaceTB/SmolLM2-360M-Instruct"  # SmolLM2 model checkpoint
+        checkpoint = f"HuggingFaceTB/SmolLM2-{self.config['model']['version']}-Instruct"  # SmolLM2 model checkpoint
         cache_dir = config['cache_dir']['path']
 
         # Load tokenizer and model from Hugging Face
-        self.tokenizer = AutoTokenizer.from_pretrained(checkpoint, cache_dir=cache_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)#, cache_dir=cache_dir)
         self.tokenizer.padding_side = 'left'
-        self.model = AutoModelForCausalLM.from_pretrained(checkpoint, cache_dir=cache_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(checkpoint)#, cache_dir=cache_dir)
 
         # Use GPU if available
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -77,10 +77,10 @@ class Model:
                 all_perplexities.append(perplexity)
 
                 # Print query-response pair and perplexity
-                print(f"Query: {input_text}")
-                print(f"Response: {cleaned_response}")
-                print(f"Perplexity: {perplexity:.4f}")
-                print("=" * 50)
+                # print(f"Query: {input_text}")
+                # print(f"Response: {cleaned_response}")
+                # print(f"Perplexity: {perplexity:.4f}")
+                # print("=" * 50)
 
         result_df = pd.DataFrame({
             'query': queries,
