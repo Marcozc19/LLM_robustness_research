@@ -4,6 +4,9 @@ import yaml
 from data_processor.main import Data
 import eval
 import inference
+from huggingface_hub import login
+import os
+
 
 def load_config():
     parser = argparse.ArgumentParser()
@@ -23,6 +26,12 @@ def main(config):
 
 
 if __name__ == '__main__':
+    # Retrieve token from environment variable
+    hf_token = os.getenv("HUGGING_FACE_HUB_TOKEN")
+    if hf_token:
+        login(token=hf_token)
+    else:   
+        raise ValueError("Hugging Face token not found. Please set HUGGING_FACE_HUB_TOKEN.")
     config = load_config()
     print("Running with config:\n", config)
     main(config)
