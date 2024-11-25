@@ -102,7 +102,7 @@ class Model:
                 perplexity = self.calculate_perplexity(tokenized_question["input_ids"], tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
                 # print(f"Query: {input_text}")
-                print(f"Response: {response}")
+                print(f"Response: {cleaned_response}")
                 print(f"Perplexity: {perplexity:.4f}")
                 print("=" * 50)
 
