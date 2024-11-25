@@ -35,7 +35,8 @@ class Model:
     def __init__(self, config, data):
         print("================ Initializing LLaMA 3.2 ================")
         self.config = config
-        self.model_id = "meta-llama/Llama-3.2-1B-Instruct"
+        version = self.config["model"]["version"]
+        self.model_id = f"meta-llama/Llama-{version}-Instruct"
 
         # Load tokenizer and model
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
