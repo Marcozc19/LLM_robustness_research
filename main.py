@@ -23,7 +23,7 @@ def main(config):
     data = Data(config)
     # run inference using the dataset created
     inference.main(config, data)
-    print(eval.eval(config))
+    # print(eval.eval(config))
 
 
 if __name__ == '__main__':
