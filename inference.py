@@ -1,6 +1,7 @@
 from models import chatgpt, llama, pythia, smolLM2
 import os
 import json
+import util
 
 def main(config, data):
     model_choice = config["model"]["name"]
@@ -22,9 +23,8 @@ def main(config, data):
 
     result_df = model.query()
 
-    output_file = data.output_path
-    output_dir = os.path.dirname(output_file)
-    os.makedirs(output_dir, exist_ok=True)
+    output_file = util.get_output_path(config)
+
     with open(output_file, "w", encoding="utf-8",newline='') as f:
         result_df.to_csv(f, index=False)
 

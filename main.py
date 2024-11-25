@@ -20,13 +20,10 @@ def load_config():
 
 def main(config):
     # create the dataset if not already created
-    
-    distortion_type_list = config["distortion"]["type"]
-    for distortion_type in distortion_type_list:        
-        # run inference using the dataset created
-        data = Data(config, distortion_type)
-        inference.main(config, data)
-        print(eval.eval(data,config))
+    data = Data(config)
+    # run inference using the dataset created
+    inference.main(config, data)
+    print(eval.eval(config))
 
 
 if __name__ == '__main__':
@@ -39,5 +36,4 @@ if __name__ == '__main__':
         raise ValueError("Hugging Face token not found. Please set HUGGING_FACE_HUB_TOKEN.")
     config = load_config()
     print("Running with config:\n", config)
-    for i in range(3):
-        main(config)
+    main(config)

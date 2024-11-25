@@ -11,15 +11,12 @@ data_source = {
 }
 
 class Data:
-    def __init__(self, config, distortion_type):
+    def __init__(self, config):
         self.config = config
         self.distortion_percentage = 0.3
-        self.distortion_type= distortion_type
-        self.dataset_path = util.get_dataset_path(config, distortion_type)
+        self.distortion_type = self.config["distortion"]["type"]
+        self.file_path = util.get_dataset_path(config)
         self.data = self.load_data()
-        self.output_path = util.get_output_path(config, distortion_type)
-        self.eval_path = util.get_eval_path(config, distortion_type)
-        self.log_path = util.get_log_path(config, distortion_type)
 
     def load_data(self):
         print("================ Loading Data ================")
@@ -33,6 +30,6 @@ class Data:
             # save the data to a json file
             processor = distortion.DistortionProcessor(df, self.distortion_type, self.distortion_percentage)
             df = processor.apply_distortions()
-            df.to_json(self.dataset_path, orient='records')
+            df.to_json(self.file_path, orient='records')
         return df.iloc[:,:]
     

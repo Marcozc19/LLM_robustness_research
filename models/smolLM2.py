@@ -12,9 +12,9 @@ class Model:
         cache_dir = config['cache_dir']['path']
 
         # Load tokenizer and model from Hugging Face
-        self.tokenizer = AutoTokenizer.from_pretrained(checkpoint, cache_dir=cache_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)#, cache_dir=cache_dir)
         self.tokenizer.padding_side = 'left'
-        self.model = AutoModelForCausalLM.from_pretrained(checkpoint, cache_dir=cache_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(checkpoint)#, cache_dir=cache_dir)
 
         # Use GPU if available
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -63,14 +63,15 @@ class Model:
             cleaned_response = decoded_response.split("\nassistant\n", 1)[-1].strip()
             all_responses.append(cleaned_response)
 
-            # Calculate perplexity for the generated response
-            perplexity = self.calculate_perplexity(output, input_id)
-            all_perplexities.append(perplexity)
-            # Print query-response pair and perplexity
-            # print(f"Query: {input_text}")
-            # print(f"Response: {cleaned_response}")
-            # print(f"Perplexity: {perplexity:.4f}")
-            # print("=" * 50)
+                # Calculate perplexity for the generated response
+                perplexity = self.calculate_perplexity(cleaned_response)
+                all_perplexities.append(perplexity)
+
+                # Print query-response pair and perplexity
+                print(f"Query: {input_text}")
+                print(f"Response: {cleaned_response}")
+                print(f"Perplexity: {perplexity:.4f}")
+                print("=" * 50)
 
         result_df = pd.DataFrame({
             'query': queries,
