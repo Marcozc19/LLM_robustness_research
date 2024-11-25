@@ -51,7 +51,7 @@ class Model:
             output = self.model.generate(
                 input["input_ids"], 
                 attention_mask=input['attention_mask'],
-                max_new_tokens=64, 
+                max_new_tokens=128, 
                 temperature=0.2, 
                 top_p=0.9, 
                 do_sample=True
@@ -66,11 +66,11 @@ class Model:
             # Calculate perplexity for the generated response
             perplexity = self.calculate_perplexity(output, input_id)
             all_perplexities.append(perplexity)
-            # Print query-response pair and perplexity
-            # print(f"Query: {input_text}")
-            # print(f"Response: {cleaned_response}")
-            # print(f"Perplexity: {perplexity:.4f}")
-            # print("=" * 50)
+                # Print query-response pair and perplexity
+                # print(f"Query: {input_text}")
+                # print(f"Response: {cleaned_response}")
+                # print(f"Perplexity: {perplexity:.4f}")
+                # print("=" * 50)
 
         result_df = pd.DataFrame({
             'query': queries,

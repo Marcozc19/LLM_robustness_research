@@ -1,0 +1,15 @@
+model:
+  name: "smollm2"
+  version: "135M"
+
+dataset:
+  name: "truthful_qa"
+
+distortion:
+  type: [[], ["character"], ["sentence"], ["sentence random"], ["phonetic"]]
+
+evaluation:
+  file: "evaluations/"
+
+cache_dir:
+  path: "/share/garg/Marco/Models"
