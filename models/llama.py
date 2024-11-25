@@ -72,6 +72,7 @@ class Model:
         print("================ Querying LLaMA 3.2 ================")
         all_responses = []
         all_perplexities = []
+        all_question = []
 
         for batch in self.dataloader:
             input_ids = batch["input_ids"].to(self.model.device)
@@ -88,15 +89,20 @@ class Model:
 
             for question, output in zip(questions, outputs):
                 response = self.tokenizer.decode(output, skip_special_tokens=True)
+                all_question.append(question)
                 all_responses.append(response)
 
                 # Calculate perplexity
                 tokenized_response = self.tokenizer(response, return_tensors="pt").to(self.model.device)
                 perplexity = self.calculate_perplexity(input_ids, tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
+                # print(f"Query: {input_text}")
+                print(f"Response: {response}")
+                print(f"Perplexity: {perplexity:.4f}")
+                print("=" * 50)
 
         result_df = pd.DataFrame({
-            "query": self.data["question"].tolist(),
+            "query": all_question,
             "response": all_responses,
             "perplexity": all_perplexities,
         })
