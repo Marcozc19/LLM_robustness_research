@@ -1,3 +1,4 @@
 __pycache__/
 venv/
 webscrape.py
+/data

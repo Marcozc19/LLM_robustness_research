@@ -10,3 +10,6 @@ distortion:
 
 evaluation:
   file: "evaluations/"
+  
+cache_dir:
+  path: "/share/garg/Marco/Models"

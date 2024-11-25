@@ -1,5 +1,5 @@
 import transformers
-from transformers import LlamaForCausalLM, LlamaTokenizer, AutoTokenizer
+from transformers import LlamaForCausalLM, LlamaTokenizer, AutoTokenizer, pipeline, AutoModelForCausalLM
 import torch
 import pandas as pd
 
@@ -33,21 +33,22 @@ class Model():
     
 
 if __name__ == "__main__":
+    model_id = "meta-llama/Llama-3.2-1B-Instruct"
+    tokenizer = AutoTokenizer.from_pretrained(model_id, cache_dir="/share/garg/Marco/Models")
+    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype="auto", device_map="auto", cache_dir="/share/garg/Marco/Models")
 
-    model_name = "meta-llama/Llama-2-7b-hf"  # Replace with the correct model ID
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = LlamaForCausalLM.from_pretrained(model_name)
-
-    # model = LlamaForCausalLM.from_pretrained("C:/Users/zhuan/.cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
-    # tokenizer = LlamaTokenizer.from_pretrained("C:/Users/zhuan/.cache/huggingface/hub/models--meta-llama--Llama-2-7b-hf")
-
-    prompt = "Hey, are you conscious? Can you talk to me?"
-    inputs = tokenizer(prompt, return_tensors="pt")
-
-    # Generate
-    generate_ids = model.generate(inputs.input_ids, max_length=30)
-    res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-    print("Response:", res)
-
-    
-
+    pipe = pipeline(
+        "text-generation",
+        model=model_id,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+    )
+    messages = [
+        {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
+        {"role": "user", "content": "Who are you?"},
+    ]
+    outputs = pipe(
+        messages,
+        max_new_tokens=256,
+    )
+    print(outputs[0]["generated_text"][-1])
