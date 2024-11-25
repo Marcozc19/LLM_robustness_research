@@ -20,8 +20,8 @@ class Data:
 
     def load_data(self):
         print("================ Loading Data ================")
-        if os.path.exists(self.dataset_path):
-            df = pd.read_json(self.dataset_path)
+        if os.path.exists(self.file_path):
+            df = pd.read_json(self.file_path)
         else:
             if self.config["dataset"]["name"] in data_source:
                 df = data_source[self.config["dataset"]["name"]]
