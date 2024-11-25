@@ -25,6 +25,7 @@ def get_log_path(config):
 def get_baseline_path(config):
     return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name'])+ "_[]_output.csv"
 
+
 if __name__ == '__main__':
     config = load_config()
     print("baseline:", pd.read_json(get_baseline_path(config)))
