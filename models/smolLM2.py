@@ -18,7 +18,7 @@ class Model:
 
         # Use GPU if available
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(self.device)
+        self.model.to(self.device)  # Move model to GPU or CPU
         print("================ SmolLM2 Initialized  ================")
         # Load data
         self.data = data.load_data()
@@ -51,7 +51,7 @@ class Model:
             output = self.model.generate(
                 input["input_ids"], 
                 attention_mask=input['attention_mask'],
-                max_new_tokens=64, 
+                max_new_tokens=128, 
                 temperature=0.2, 
                 top_p=0.9, 
                 do_sample=True
@@ -66,11 +66,6 @@ class Model:
             # Calculate perplexity for the generated response
             perplexity = self.calculate_perplexity(output, input_id)
             all_perplexities.append(perplexity)
-            # Print query-response pair and perplexity
-            # print(f"Query: {input_text}")
-            # print(f"Response: {cleaned_response}")
-            # print(f"Perplexity: {perplexity:.4f}")
-            # print("=" * 50)
 
         result_df = pd.DataFrame({
             'query': queries,
@@ -81,9 +76,8 @@ class Model:
     
     def calculate_perplexity(self, output, input_ids):
         """Calculate perplexity for a generated response using the raw output."""
-        # Tokenize the response
         # Concatenate the input tokens and generated tokens as a single input for perplexity
-        input_ids_combined = torch.cat((input_ids, output), dim=-1)
+        input_ids_combined = torch.cat((input_ids, output), dim=-1).to(self.device)
 
         # Compute the loss with the generated response as the label
         with torch.no_grad():
@@ -98,35 +92,18 @@ class Model:
 if __name__ == "__main__":
     checkpoint = "HuggingFaceTB/SmolLM2-360M-Instruct"
 
-    device = "cpu" # for GPU usage or "cpu" for CPU usage
+    device = "cuda" if torch.cuda.is_available() else "cpu"  # Automatically use GPU if available
     tokenizer = AutoTokenizer.from_pretrained(checkpoint, cache_dir= "/share/garg/Marco/Models")
-    # for multiple GPUs install accelerate and do `model = AutoModelForCausalLM.from_pretrained(checkpoint, device_map="auto")`
     model = AutoModelForCausalLM.from_pretrained(checkpoint, cache_dir= "/share/garg/Marco/Models").to(device)
 
-    messages = [{"role": "user", "content": "What is the capital of France."}]
-    input_text=tokenizer.apply_chat_template(messages, tokenize=False)
+    messages = [{"role": "user", "content": "What is the capital of France?"}]
+    input_text = tokenizer.apply_chat_template(messages, tokenize=False)
     inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
     outputs = model.generate(
-                inputs, 
-                max_new_tokens=50, 
-                temperature=0.2, 
-                top_p=0.9, 
-                do_sample=True)
+        inputs, 
+        max_new_tokens=50, 
+        temperature=0.2, 
+        top_p=0.9, 
+        do_sample=True
+    )
     print(tokenizer.decode(outputs[0]))
-
-    # model_name = "HuggingFaceTB/SmolLM2-1.7B-Instruct"  # SmolLM2 model checkpoint
-    # tokenizer = AutoTokenizer.from_pretrained(model_name)
-    # model = AutoModelForCausalLM.from_pretrained(model_name)
-    # # Load tokenizer and model from Hugging Face
-    
-    
-    # # Sample configuration dictionary
-
-    # # Run the query method and get responses
-    # prompt = "Hey, are you conscious? Can you talk to me?"
-
-    # inputs = tokenizer(prompt, return_tensors="pt")
-    # generate_ids = model.generate(inputs.input_ids, max_length=30)
-    # res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
-    # # Print results
-    # print(prompt, res)
