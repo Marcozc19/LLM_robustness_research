@@ -1,95 +1,102 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from torch.utils.data import DataLoader, Dataset
 import pandas as pd
-import math
 import torch
+import math
+
+
+class CustomDataset(Dataset):
+    """Custom Dataset for handling queries."""
+    def __init__(self, queries, tokenizer, max_length=128):
+        self.queries = queries
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+
+    def __len__(self):
+        return len(self.queries)
+
+    def __getitem__(self, idx):
+        question = self.queries[idx]
+        tokens = self.tokenizer(
+            question,
+            padding="max_length",
+            truncation=True,
+            max_length=self.max_length,
+            return_tensors="pt",
+        )
+        return {
+            "input_ids": tokens["input_ids"].squeeze(0),
+            "attention_mask": tokens["attention_mask"].squeeze(0),
+            "question": question,
+        }
+
 
 class Model:
     def __init__(self, config, data):
         print("================ Initializing LLaMA 3.2 ================")
         self.config = config
         self.model_id = "meta-llama/Llama-3.2-1B-Instruct"
-        cache_dir = config["cache_dir"]["path"]  # Cache directory path
 
         # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)#, cache_dir=cache_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         self.tokenizer.padding_side = 'left'
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
-            # cache_dir=cache_dir,
             torch_dtype="auto",
             device_map="auto"
         )
-        self.pipe = pipeline(
-            "text-generation",
-            model=self.model,
-            tokenizer=self.tokenizer,
-            device=self.model.device,  # Use GPU if available
-            torch_dtype=torch.bfloat16,
-        )
 
-        # Batch size configuration
+        # Load data and prepare DataLoader
         self.batch_size = 8
         self.data = data.load_data()  # Load data using the provided `data` object
+        if not isinstance(self.data, pd.DataFrame):
+            raise ValueError("Data is not in expected format (DataFrame).")
+        
+        self.dataset = CustomDataset(self.data['question'].tolist(), self.tokenizer)
+        self.dataloader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False)
         print("================ LLaMA 3.2 Initialized ================")
-
-    def batching(self, data_list):
-        """Yield successive batches from the data list."""
-        for i in range(0, len(data_list), self.batch_size):
-            yield data_list[i:i + self.batch_size]
 
     def calculate_perplexity(self, input_ids, output_ids):
         """Calculate perplexity for a given input-output sequence."""
-        # Concatenate input tokens and output tokens
         input_ids_combined = torch.cat((input_ids, output_ids), dim=-1).to(self.model.device)
 
-        # Compute the loss with the combined sequence as the labels
         with torch.no_grad():
             outputs = self.model(input_ids_combined, labels=input_ids_combined)
             loss = outputs.loss.item()
 
-        # Perplexity calculation
         perplexity = math.exp(loss)
         return perplexity
 
     def query(self):
         print("================ Querying LLaMA 3.2 ================")
-        if isinstance(self.data, pd.DataFrame):
-            queries = self.data['question'].tolist()  # Extract all questions into a list
-        else:
-            raise ValueError("Data is not in expected format (DataFrame).")
-
         all_responses = []
         all_perplexities = []
 
-        for batch in self.batching(queries):
-            # Format batch queries into prompts
-            batch_prompts = []
-            for question in batch:
-                messages = [
-                    {"role": "system", "content": "You are a helpful AI chatbot that will provide accurate answers to every question asked."},
-                    {"role": "user", "content": question},
-                ]
-                batch_prompts.append(messages)
+        for batch in self.dataloader:
+            input_ids = batch["input_ids"].to(self.model.device)
+            attention_mask = batch["attention_mask"].to(self.model.device)
+            questions = batch["question"]
 
-            # Use pipeline for batch generation
-            results = self.pipe(batch_prompts, max_new_tokens=128)
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    max_new_tokens=128,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                )
 
-            # Collect responses and calculate perplexity
-            for result, question in zip(results, batch):
-                response = result["generated_text"]
+            for question, output in zip(questions, outputs):
+                response = self.tokenizer.decode(output, skip_special_tokens=True)
                 all_responses.append(response)
 
-                # Tokenize the response to get input_ids and output_ids
-                inputs = self.tokenizer(question, return_tensors="pt").to(self.model.device)
-                outputs = self.tokenizer(response, return_tensors="pt").to(self.model.device)
-
-                # Calculate perplexity for the generated response
-                perplexity = self.calculate_perplexity(inputs["input_ids"], outputs["input_ids"])
+                # Calculate perplexity
+                tokenized_response = self.tokenizer(response, return_tensors="pt").to(self.model.device)
+                perplexity = self.calculate_perplexity(input_ids, tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
 
         result_df = pd.DataFrame({
-            "query": queries,
+            "query": self.data["question"].tolist(),
             "response": all_responses,
             "perplexity": all_perplexities,
         })
