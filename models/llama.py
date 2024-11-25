@@ -90,7 +90,7 @@ class Model:
 
             for question, output in zip(questions, outputs):
                 response = self.tokenizer.decode(output, skip_special_tokens=True)
-                cleaned_response = response.replace(question, "").strip()
+                # cleaned_response = response.replace(question, "").strip()
                 all_question.append(question)
                 all_responses.append(response)
 
@@ -101,10 +101,10 @@ class Model:
                 # Calculate perplexity for the specific input-output pair
                 perplexity = self.calculate_perplexity(tokenized_question["input_ids"], tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
-                # print(f"Query: {input_text}")
-                print(f"Response: {cleaned_response}")
-                print(f"Perplexity: {perplexity:.4f}")
-                print("=" * 50)
+                # print(f"Query: {question}")
+                # print(f"Response: {response}")
+                # print(f"Perplexity: {perplexity:.4f}")
+                # print("=" * 50)
 
         result_df = pd.DataFrame({
             "query": all_question,
