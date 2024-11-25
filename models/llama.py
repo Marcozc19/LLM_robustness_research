@@ -7,25 +7,24 @@ class Model:
     def __init__(self, config, data):
         print("================ Initializing LLaMA 3.2 ================")
         self.config = config
-        # self.model_id = config["model"]["name"]  # Specify model ID from config
         self.model_id = "meta-llama/Llama-3.2-1B-Instruct"
         cache_dir = config["cache_dir"]["path"]  # Cache directory path
 
         # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, cache_dir=cache_dir)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)#, cache_dir=cache_dir)
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         self.tokenizer.padding_side = 'left'
         self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_id,
-                cache_dir=cache_dir,
-                torch_dtype="auto",
-                device_map="auto"
-            )
+            self.model_id,
+            # cache_dir=cache_dir,
+            torch_dtype="auto",
+            device_map="auto"
+        )
         self.pipe = pipeline(
             "text-generation",
             model=self.model,
             tokenizer=self.tokenizer,
-            device_map="auto",
+            device=self.model.device,  # Use GPU if available
             torch_dtype=torch.bfloat16,
         )
 
@@ -63,58 +62,31 @@ class Model:
         all_responses = []
         all_perplexities = []
 
-        for question in queries:
-
-            messages = [
-                {"role": "system", "content": "You are a helpful AI chatbot that will provide accurate answers to every question asked."},
-                {"role": "user", "content": question},
-            ]
+        for batch in self.batching(queries):
+            # Format batch queries into prompts
+            batch_prompts = []
+            for question in batch:
+                messages = [
+                    {"role": "system", "content": "You are a helpful AI chatbot that will provide accurate answers to every question asked."},
+                    {"role": "user", "content": question},
+                ]
+                batch_prompts.append(messages)
 
             # Use pipeline for batch generation
-            results = self.pipe(messages, max_new_tokens=128, batch_size=self.batch_size)
+            results = self.pipe(batch_prompts, max_new_tokens=128)
 
-        
+            # Collect responses and calculate perplexity
+            for result, question in zip(results, batch):
+                response = result["generated_text"]
+                all_responses.append(response)
 
-            # Collect responses and calculate perplexity        
-            response = results[0]["generated_text"][-1]['content']
-            all_responses.append(response)
+                # Tokenize the response to get input_ids and output_ids
+                inputs = self.tokenizer(question, return_tensors="pt").to(self.model.device)
+                outputs = self.tokenizer(response, return_tensors="pt").to(self.model.device)
 
-            # Tokenize the response to get input_ids and output_ids
-            inputs = self.tokenizer(question, return_tensors="pt").to(self.model.device)
-            outputs = self.tokenizer(response, return_tensors="pt").to(self.model.device)
-
-            # Calculate perplexity for the generated response
-            perplexity = self.calculate_perplexity(inputs["input_ids"], outputs["input_ids"])
-            all_perplexities.append(perplexity)
-
-
-        # for batch in self.batching(queries):
-        #     batch_prompts = []
-
-        #     # Format batch queries into prompts
-        #     for question in batch:
-        #         messages = [
-        #             {"role": "system", "content": "You are a helpful AI chatbot that will provide accurate answers to every question asked."},
-        #             {"role": "user", "content": question},
-        #         ]
-        #         # Format messages for pipeline input
-        #         batch_prompts.append(messages)
-
-        #     # Use pipeline for batch generation
-        #     results = self.pipe(batch_prompts, max_new_tokens=128, batch_size=self.batch_size)
-
-        #     # Collect responses and calculate perplexity
-        #     for result, question in zip(results, batch):
-        #         response = result[0]["generated_text"][-1]['content']
-        #         all_responses.append(response)
-
-        #         # Tokenize the response to get input_ids and output_ids
-        #         inputs = self.tokenizer(question, return_tensors="pt").to(self.model.device)
-        #         outputs = self.tokenizer(response, return_tensors="pt").to(self.model.device)
-
-        #         # Calculate perplexity for the generated response
-        #         perplexity = self.calculate_perplexity(inputs["input_ids"], outputs["input_ids"])
-        #         all_perplexities.append(perplexity)
+                # Calculate perplexity for the generated response
+                perplexity = self.calculate_perplexity(inputs["input_ids"], outputs["input_ids"])
+                all_perplexities.append(perplexity)
 
         result_df = pd.DataFrame({
             "query": queries,
@@ -125,24 +97,16 @@ class Model:
 
 
 if __name__ == "__main__":
-    model_id = "meta-llama/Llama-3.2-1B-Instruct"
-    tokenizer = AutoTokenizer.from_pretrained(model_id, cache_dir="/share/garg/Marco/Models")
-    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype="auto", device_map="auto", cache_dir="/share/garg/Marco/Models")
+    config = {
+        "cache_dir": {"path": "/share/garg/Marco/Models"}
+    }
 
-    pipe = pipeline(
-        "text-generation",
-        model=model_id,
-        torch_dtype=torch.bfloat16,
-        device_map="auto",
-    )
-    messages = [
-        {"role": "system", "content": "You are a helpful AI chatbot that will provide accurate answers to every question asked."},
-        {"role": "user", "content": "Who are you?"},
-    ]
-    outputs = pipe(
-        messages,
-        max_new_tokens=256,
-    )
-    print(outputs[0]["generated_text"][-1]['content'])
-    
+    class MockDataLoader:
+        def load_data(self):
+            return pd.DataFrame({"question": ["Who are you?", "What is AI?"]})
 
+    data = MockDataLoader()
+
+    model = Model(config, data)
+    result_df = model.query()
+    print(result_df)
