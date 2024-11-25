@@ -93,8 +93,11 @@ class Model:
                 all_responses.append(response)
 
                 # Calculate perplexity
+                tokenized_question = self.tokenizer(question, return_tensors="pt").to(self.model.device)
                 tokenized_response = self.tokenizer(response, return_tensors="pt").to(self.model.device)
-                perplexity = self.calculate_perplexity(input_ids, tokenized_response["input_ids"])
+
+                # Calculate perplexity for the specific input-output pair
+                perplexity = self.calculate_perplexity(tokenized_question["input_ids"], tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
                 # print(f"Query: {input_text}")
                 print(f"Response: {response}")
