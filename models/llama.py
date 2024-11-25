@@ -90,6 +90,7 @@ class Model:
 
             for question, output in zip(questions, outputs):
                 response = self.tokenizer.decode(output, skip_special_tokens=True)
+                cleaned_response = response.replace(question, "").strip()
                 all_question.append(question)
                 all_responses.append(response)
 

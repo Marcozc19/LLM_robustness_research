@@ -31,48 +31,58 @@ class Model:
 
     def query(self):
         print("================ Querying SmolLM2 ================")
-        if isinstance(self.data, pd.DataFrame):
-            queries = self.data['question'].tolist()
-        else:
-            raise ValueError("Data is not in expected format (DataFrame).")
-
+        
+        # Validate data format
+        if not isinstance(self.data, pd.DataFrame):
+            raise ValueError("Data is not in the expected format (DataFrame).")
+        
+        queries = self.data['question'].tolist()  # Extract queries as a list
         all_responses = []
         all_perplexities = []
-
+        
         # Process queries in batches
-        for question in queries:
-            messages = [{"role": "user", "content": question}]
-            input_text = self.tokenizer.apply_chat_template(messages, tokenize=False)
+        for batch_queries in self.batching(queries):
+            # Tokenize the batch
+            inputs = self.tokenizer(
+                batch_queries,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=512  # Adjust max_length as needed
+            ).to(self.device)
 
-            # Tokenize the batch of templated inputs
-            input = self.tokenizer(input_text, return_tensors="pt", padding=True, truncation=True).to(self.device)
+            # Generate responses for the batch
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    inputs["input_ids"],
+                    attention_mask=inputs["attention_mask"],
+                    max_new_tokens=128,
+                    temperature=0.2,
+                    top_p=0.9,
+                    do_sample=True
+                )
 
-            # Generate responses
-            output = self.model.generate(
-                input["input_ids"], 
-                attention_mask=input['attention_mask'],
-                max_new_tokens=128, 
-                temperature=0.2, 
-                top_p=0.9, 
-                do_sample=True
-            )
-            output_token = output.tolist()[0]
-            # Decode and calculate perplexity directly from the generated responses
-            input_id =input["input_ids"]
-            decoded_response = self.tokenizer.decode(output_token, skip_special_tokens=True)
-            cleaned_response = decoded_response.split("\nassistant\n", 1)[-1].strip()
-            all_responses.append(cleaned_response)
+            # Decode responses and calculate perplexity for each query
+            for query, output in zip(batch_queries, outputs):
+                # Decode response
+                decoded_response = self.tokenizer.decode(output, skip_special_tokens=True)
+                cleaned_response = decoded_response.split("\nassistant\n", 1)[-1].strip()
+                all_responses.append(cleaned_response)
 
-            # Calculate perplexity for the generated response
-            perplexity = self.calculate_perplexity(output, input_id)
-            all_perplexities.append(perplexity)
+                # Calculate perplexity for the response
+                tokenized_query = self.tokenizer(query, return_tensors="pt").to(self.device)
+                tokenized_response = self.tokenizer(decoded_response, return_tensors="pt").to(self.device)
+                perplexity = self.calculate_perplexity(tokenized_response["input_ids"], tokenized_query["input_ids"])
+                all_perplexities.append(perplexity)
 
+        # Compile results into a DataFrame
         result_df = pd.DataFrame({
             'query': queries,
             'response': all_responses,
             'perplexity': all_perplexities
         })
         return result_df
+
     
     def calculate_perplexity(self, output, input_ids):
         """Calculate perplexity for a generated response using the raw output."""
