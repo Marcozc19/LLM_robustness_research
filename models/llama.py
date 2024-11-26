@@ -116,10 +116,10 @@ class Model:
                 # Calculate perplexity for the specific input-output pair
                 perplexity = self.calculate_perplexity(tokenized_question["input_ids"], tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
-                print(f"Query: {question}")
-                print(f"Response: {cleaned_response}")
-                print(f"Perplexity: {perplexity:.4f}")
-                print("=" * 50)
+                # print(f"Query: {question}")
+                # print(f"Response: {cleaned_response}")
+                # print(f"Perplexity: {perplexity:.4f}")
+                # print("=" * 50)
 
         result_df = pd.DataFrame({
             "query": all_question,
