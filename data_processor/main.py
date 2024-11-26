@@ -34,5 +34,5 @@ class Data:
             processor = distortion.DistortionProcessor(df, self.distortion_type, self.distortion_percentage)
             df = processor.apply_distortions()
             df.to_json(self.dataset_path, orient='records')
-        return df.iloc[:5,:]
+        return df.iloc[:,:]
     
