@@ -6,28 +6,43 @@ import math
 
 
 class CustomDataset(Dataset):
-    """Custom Dataset for handling queries."""
+    """Custom Dataset for handling queries with templating."""
     def __init__(self, queries, tokenizer, max_length=128):
         self.queries = queries
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.system_prompt = "You are a helpful AI chatbot that helps answer user questions."
 
     def __len__(self):
         return len(self.queries)
 
     def __getitem__(self, idx):
+        # Get the raw query
         question = self.queries[idx]
+
+        # Apply the template: prepend system and user role messages
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": question},
+        ]
+
+        # Convert the structured messages into a string format
+        templated_query = self.tokenizer.apply_chat_template(messages, tokenize=False)
+
+        # Tokenize the templated query
         tokens = self.tokenizer(
-            question,
+            templated_query,
             padding="max_length",
             truncation=True,
             max_length=self.max_length,
             return_tensors="pt",
         )
+
         return {
             "input_ids": tokens["input_ids"].squeeze(0),
             "attention_mask": tokens["attention_mask"].squeeze(0),
             "question": question,
+            "templated_query": templated_query,  # Optional for debugging
         }
 
 
@@ -39,7 +54,7 @@ class Model:
         self.model_id = f"meta-llama/Llama-{version}-Instruct"
 
         # Load tokenizer and model
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, padding_side='left')
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         self.tokenizer.padding_side = 'left'
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -101,10 +116,10 @@ class Model:
                 # Calculate perplexity for the specific input-output pair
                 perplexity = self.calculate_perplexity(tokenized_question["input_ids"], tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
-                # print(f"Query: {question}")
-                # print(f"Response: {response}")
-                # print(f"Perplexity: {perplexity:.4f}")
-                # print("=" * 50)
+                print(f"Query: {question}")
+                print(f"Response: {response}")
+                print(f"Perplexity: {perplexity:.4f}")
+                print("=" * 50)
 
         result_df = pd.DataFrame({
             "query": all_question,
