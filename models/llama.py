@@ -105,9 +105,9 @@ class Model:
 
             for question, output in zip(questions, outputs):
                 response = self.tokenizer.decode(output, skip_special_tokens=True)
-                # cleaned_response = response.replace(question, "").strip()
+                cleaned_response = response.split("assistant\n", 1)[-1].strip()
                 all_question.append(question)
-                all_responses.append(response)
+                all_responses.append(cleaned_response)
 
                 # Calculate perplexity
                 tokenized_question = self.tokenizer(question, return_tensors="pt").to(self.model.device)
@@ -117,7 +117,7 @@ class Model:
                 perplexity = self.calculate_perplexity(tokenized_question["input_ids"], tokenized_response["input_ids"])
                 all_perplexities.append(perplexity)
                 print(f"Query: {question}")
-                print(f"Response: {response}")
+                print(f"Response: {cleaned_response}")
                 print(f"Perplexity: {perplexity:.4f}")
                 print("=" * 50)
 
