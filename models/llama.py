@@ -10,6 +10,7 @@ class CustomDataset(Dataset):
     def __init__(self, queries, tokenizer, max_length=128):
         self.queries = queries
         self.tokenizer = tokenizer
+        self.tokenizer.padding_side = 'left'
         self.max_length = max_length
         self.system_prompt = "You are a helpful AI chatbot that helps answer user questions."
 
@@ -36,6 +37,7 @@ class CustomDataset(Dataset):
             truncation=True,
             max_length=self.max_length,
             return_tensors="pt",
+
         )
 
         return {
