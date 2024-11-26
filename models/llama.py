@@ -10,7 +10,6 @@ class CustomDataset(Dataset):
     def __init__(self, queries, tokenizer, max_length=128):
         self.queries = queries
         self.tokenizer = tokenizer
-        self.tokenizer.padding_side = 'left'
         self.max_length = max_length
         self.system_prompt = "You are a helpful AI chatbot that helps answer user questions."
 
@@ -24,12 +23,15 @@ class CustomDataset(Dataset):
         # Apply the template: prepend system and user role messages
         messages = [
             {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": question},
+            {"role": "user", "content": question}
         ]
-
         # Convert the structured messages into a string format
-        templated_query = self.tokenizer.apply_chat_template(messages, tokenize=False)
-
+        templated_query = self.tokenizer.apply_chat_template(messages, 
+                                                             tokenize=False, 
+                                                             add_generation_prompt=True, 
+                                                             return_tensors="pt",)
+        # templated_query = question
+        self.tokenizer.padding_side = 'left'
         # Tokenize the templated query
         tokens = self.tokenizer(
             templated_query,
@@ -39,7 +41,7 @@ class CustomDataset(Dataset):
             return_tensors="pt",
 
         )
-
+        # print(tokens)
         return {
             "input_ids": tokens["input_ids"].squeeze(0),
             "attention_mask": tokens["attention_mask"].squeeze(0),
@@ -59,6 +61,7 @@ class Model:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, padding_side='left')
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         self.tokenizer.padding_side = 'left'
+        # print(self.tokenizer)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
             torch_dtype="auto",
