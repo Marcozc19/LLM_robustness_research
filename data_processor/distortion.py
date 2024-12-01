@@ -7,7 +7,7 @@ nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger_eng')
 
 class DistortionProcessor:
-    def __init__(self, data, distortion_types, distortion_percentage=0.3):
+    def __init__(self, data, distortion_types, distortion_percentage):
         self.data = data
         self.distortion_types = distortion_types
         self.distortion_percentage = distortion_percentage

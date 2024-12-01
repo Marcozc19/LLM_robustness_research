@@ -1,0 +1,16 @@
+model:
+  name: "llama"
+  version: "3.2-1B"
+
+dataset:
+  name: "truthful_qa"
+  distortion_percentage: 0.1
+
+distortion:
+  type: [[], ["character"], ["sentence"], ["sentence random"], ["phonetic"]]
+
+evaluation:
+  file: "evaluations/"
+  
+cache_dir:
+  path: "/share/garg/Marco/Models"

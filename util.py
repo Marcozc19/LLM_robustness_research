@@ -15,15 +15,17 @@ def read_json(path):
     return pd.read_json(path)
 
 def get_dataset_path(config, distortion_type):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name']) +"_" + str(distortion_type) + "_dataset.json"
+    return "data/" +  str(config['dataset']['name']) + "/" + str(config['dataset']['distortion_percentage']) + "/" +str(config['dataset']['name']) +"_" + str(distortion_type) + "_dataset.json"
 def get_output_path(config, distortion_type):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['model']['version'])+ "/" + str(distortion_type) +"_output.csv"
+    return "data/" +  str(config['dataset']['name']) + "/" + str(config['dataset']['distortion_percentage']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['model']['version'])+ "/" + str(distortion_type) +"_output.csv"
 def get_eval_path(config, distortion_type):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['model']['version'])+ "/" + str(distortion_type) +"_eval.csv"
+    return "data/" +  str(config['dataset']['name']) + "/" + str(config['dataset']['distortion_percentage']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['model']['version'])+ "/" + str(distortion_type) +"_eval.csv"
 def get_log_path(config, distortion_type):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['model']['version'])+ "/" + str(distortion_type) +"_avg_results.csv"
+    return "data/" +  str(config['dataset']['name']) + "/" + str(config['dataset']['distortion_percentage']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name']) + "_" + str(config['model']['version'])+ "/" + str(distortion_type) +"_avg_results.csv"
 def get_baseline_path(config):
-    return "data/" +  str(config['dataset']['name']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name'])+ "_" + str(config['model']['version'])+ "/"+ "[]_output.csv"
+    return "data/" +  str(config['dataset']['name']) + "/" + str(config['dataset']['distortion_percentage']) + "/" +str(config['dataset']['name'])  + "_"+str(config['model']['name'])+ "_" + str(config['model']['version'])+ "/"+ "[]_output.csv"
+def get_folder_path(config):
+    return "data/" +  str(config['dataset']['name']) + "/" + str(config['dataset']['distortion_percentage']) 
 
 if __name__ == '__main__':
     config = load_config()
