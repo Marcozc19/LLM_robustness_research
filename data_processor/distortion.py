@@ -61,7 +61,6 @@ class DistortionProcessor:
                 random.shuffle(words)  # Shuffle the list of words
             else:
                 random_seed = random.randint(0, len(words) - 1)
-                print("random seed: ", random_seed)
                 words =words[random_seed:] + words[:random_seed]
             return ' '.join(words) 
         print("============== Distorting data - sentence =================")
