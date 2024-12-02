@@ -4,6 +4,7 @@ model:
 
 dataset:
   name: "truthful_qa"
+  distortion_percentage: 0.3
 
 distortion:
   type: [[], ["character"], ["sentence"], ["sentence random"], ["phonetic"]]
