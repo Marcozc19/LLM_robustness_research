@@ -29,11 +29,9 @@ class Data:
         else:
             if self.config["dataset"]["name"] in data_source:
                 df = data_source[self.config["dataset"]["name"]]
-                print("===================== Read dataset==============================")
-                print(df)
+                # print("===================== Read dataset==============================")
+                # print(df)
                 df = df.copy()
-                
-                
             else:
                 raise ValueError(f"Dataset {self.config['dataset']['name']} not found. Please choose one of {list(data_source.keys())}.")
             # save the data to a json file
