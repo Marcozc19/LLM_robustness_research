@@ -39,5 +39,5 @@ if __name__ == '__main__':
         raise ValueError("Hugging Face token not found. Please set HUGGING_FACE_HUB_TOKEN.")
     config = load_config()
     print("Running with config:\n", config)
-    for i in range(2):
+    for i in range(1):
         main(config)
